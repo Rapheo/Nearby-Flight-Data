@@ -1,21 +1,44 @@
 import requests
 import keyboard
 import os
+import math
+
+
+distance_km_val = 100
+
+lamin = 0
+lamax = 0
+lomin = 0
+lomax = 0
+
+def calculate_bounds(lat, lon, distance_km = distance_km_val):
+    lat_rad = math.radians(lat)
+
+    delta_lat = distance_km / 111  # ~111 km per degree of latitude
+    delta_lon = distance_km / (111 * math.cos(lat_rad))  # varies with latitude
+
+    lamin = lat - delta_lat
+    lamax = lat + delta_lat
+    lomin = lon - delta_lon
+    lomax = lon + delta_lon
+    return round(lamin, 6), round(lamax, 6), round(lomin, 6), round(lomax, 6)
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
 lat, lon = 23.7993984, 90.423296
-delta = 0.1   # approx 11km or 11000 meter
+# delta = 0.1   # approx 11km or 11000 meter
 
+lamin, lamax, lomin, lomax = calculate_bounds(lat, lon)
+
+print("lamin: " , lamin , " lamax: " , lamax , " lomin: " , lomin , " lomax: " , lomax)
 url = (
     f"https://opensky-network.org/api/states/all"
-    # f"?lamin={lat}&lomin={lon}"
-    # f"&lamax={lat}&lomax={lon}"
-    f"?lamin={lat-delta}&lomin={lon-delta}"
-    f"&lamax={lat+delta}&lomax={lon+delta}"
+    f"?lamin={lamin}&lomin={lomin}"
+    f"&lamax={lamax}&lomax={lomax}"
 )
+
 r = requests.get(url)
 data = r.json()
 count = 0
@@ -29,7 +52,7 @@ while True:
         print("terminal cleared")
     
     if not data.get("states"):
-        print("No airborne flights within ~11 km.")
+        print("No airborne flights within ~/s km.", distance_km_val)
     else:
         if count == 0:
             clear_terminal()
